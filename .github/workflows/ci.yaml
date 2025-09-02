@@ -60,7 +60,10 @@ jobs:
           name: build-output-${{ matrix.go-version }}   # FIXED: Match the artifact name from build
           path: ./build
 
-      - name: Step 4 - Run the Compiled Binary
+      - name: Step 4a - Make Compiled Binary Executable
+        run: chmod +x ./build/myapp
+
+      - name: Step 4b - Run the Compiled Binary
         run: ./build/myapp
 
       - name: Step 5 - Install golangci-lint for Code Linting
