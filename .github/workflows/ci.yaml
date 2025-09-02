@@ -34,7 +34,7 @@ jobs:
       - name: Step 5 - Upload Compiled Binary as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
+          name: build-output-${{ matrix.go-version }}
           path: myapp
 
   test:
@@ -57,7 +57,7 @@ jobs:
       - name: Step 3 - Download Compiled Binary from Build Job
         uses: actions/download-artifact@v4
         with:
-          name: build-output
+          name: build-output-${{ matrix.go-version }}   # FIXED: Match the artifact name from build
           path: ./build
 
       - name: Step 4 - Run the Compiled Binary
