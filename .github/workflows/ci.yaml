@@ -1,31 +1,90 @@
-name: Go CI
+name: Go CI/CD Pipeline
 
-on:
+on: 
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-and-test:
+  build:
+    name: Build Job - Compile Go Project
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
+    strategy:
+      matrix: 
+        go-version: [1.21, 1.22]
+    
+    steps: 
+      - name: Step 1 - Checkout Repository Code
         uses: actions/checkout@v3
 
-      - name: Set up Go
+      - name: Step 2 - Set Up Go Environment
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21
-
-      - name: Install dependencies
+          go-version: ${{ matrix.go-version }}
+      
+      - name: Step 3 - Install Go Module Dependencies
         run: go mod tidy
 
-      - name: Run tests
-        run: go test ./... -v -cover
+      - name: Step 4 - Compile Go Project
+        run: go build -o myapp ./...
 
-      - name: Upload coverage
+      - name: Step 5 - Upload Compiled Binary as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: myapp
+
+  test:
+    name: Test Job - Run Linting, Tests, and Coverage
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        go-version: [1.21, 1.22]
+
+    steps: 
+      - name: Step 1 - Checkout Repository Code
+        uses: actions/checkout@v3
+      
+      - name: Step 2 - Set Up Go Environment
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Step 3 - Download Compiled Binary from Build Job
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: ./build
+
+      - name: Step 4 - Run the Compiled Binary
+        run: ./build/myapp
+
+      - name: Step 5 - Install golangci-lint for Code Linting
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Step 6 - Run Code Linting on Project
+        run: golangci-lint run ./...
+
+      - name: Step 7 - Install gotestsum for Structured Test Output
+        run: go install gotest.tools/gotestsum@latest
+
+      - name: Step 8 - Run Tests Using gotestsum with Verbose Logging
+        run: gotestsum --format=standard-verbose --junitfile=golang-test-report.xml ./...
+
+      - name: Step 9 - Upload Test Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: golang-test-report.xml
+
+      - name: Step 10 - Run Go Test with Coverage Profile
+        run: go test ./... -coverprofile=coverage.out
+
+      - name: Step 11 - Upload Coverage Report Artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
