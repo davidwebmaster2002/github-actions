@@ -78,7 +78,7 @@ jobs:
       - name: Step 9 - Upload Test Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-report-${{ matrix.go-version }}
           path: golang-test-report.xml
 
       - name: Step 10 - Run Go Test with Coverage Profile
@@ -87,5 +87,5 @@ jobs:
       - name: Step 11 - Upload Coverage Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-${{ matrix.go-version }}
           path: coverage.out
